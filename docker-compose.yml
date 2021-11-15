@@ -1,0 +1,57 @@
+version: '3.7'
+
+services:
+  api:
+    container_name: api
+    image: node:14.16-alpine
+    volumes:
+      - ./package.json:/usr/src/app/package.json
+      - ./yarn.lock:/usr/src/app/yarn.lock
+      - ./src:/usr/src/app/src
+      - ./bin:/usr/src/app/bin
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.build.json:/usr/src/app/tsconfig.build.json
+      - ./nest-cli.json:/usr/src/app/nest-cli.json
+      - api_nodemodules:/usr/src/app/node_modules/
+    ports:
+      - 9229:9229
+      - ${SERVER_PORT?"Missing SERVER_PORT variable"}:${SERVER_PORT}
+    working_dir: /usr/src/app
+    command: ./bin/start.sh
+    networks:
+      - local
+    depends_on:
+      - postgres
+    dns:
+      - 10.0.0.2
+      - 8.8.8.8
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      TYPEORM_CONNECTION: postgres
+      TYPEORM_HOST: postgres
+      TYPEORM_USERNAME: ${TYPEORM_USERNAME?"Missing TYPEORM_USERNAME variable"}
+      TYPEORM_PASSWORD: ${TYPEORM_PASSWORD?"Missing TYPEORM_PASSWORD variable"}
+      TYPEORM_DATABASE: ${TYPEORM_DATABASE?"Missing TYPEORM_DATABASE variable"}
+      TYPEORM_PORT: ${TYPEORM_PORT?"Missing TYPEORM_PORT variable"}
+      TYPEORM_ENTITIES: ${TYPEORM_ENTITIES?"Missing TYPEORM_ENTITIES variable"}
+      TYPEORM_MIGRATIONS: ${TYPEORM_MIGRATIONS?"Missing TYPEORM_MIGRATIONS variable"}
+      TYPEORM_MIGRATIONS_DIR: ${TYPEORM_MIGRATIONS_DIR?"Missing TYPEORM_MIGRATIONS_DIR variable"}
+  postgres:
+    container_name: postgres
+    image: postgres:12
+    networks:
+      - local
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: didomi
+      POSTGRES_DB: didomi
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+networks:
+  local:
+volumes:
+  pgdata:
+  api_nodemodules:
